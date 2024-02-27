@@ -16,10 +16,12 @@ async function postRN(loop = 0) {
   axios.defaults.headers.post['Content-Type'] = 'application/json'
 
   const columns = [
-    'ID_de_siniestro',
-    'Numero_de_Siniestro_1',
-    'Numero_de_Siniestro_2',
+    'ID_Siniestro',
+    'Numero_de_Siniestro_Nuevo',
     'Poliza',
+    'Producto',
+    'Oficina',
+    'Numero_de_Siniestro',
     'ID_de_incidente',
   ]
 
@@ -73,7 +75,7 @@ async function Listados_Dni_Cuit() {
     fs.mkdirSync(directorio, { recursive: true })
   }
 
-  for (let loop = 0; loop <= 0; loop++) {
+  for (let loop = 0; loop <= Math.ceil(cantidadDeRegistros / cantidadPorArchivo); loop++) {
     const cantidadRegistros = await postRN(loop)
     totalRegistros += cantidadRegistros
     totalDeArchivos++

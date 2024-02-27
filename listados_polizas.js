@@ -15,7 +15,7 @@ async function postRN(loop = 0) {
   axios.defaults.headers.common['Authorization'] = process.env.ORACLE_PASSWORD
   axios.defaults.headers.post['Content-Type'] = 'application/json'
 
-  const columns = ['ID_de_poliza', 'Poliza', 'E-Poliza', 'Producto', 'ID_de_incidente']
+  const columns = ['ID_Poliza', 'Poliza', 'E_Poliza', 'Producto', 'ID_en_AIS', 'ID_de_incidente']
 
   const stringifier = stringify({
     header: true,
@@ -67,7 +67,7 @@ async function listados_polizas() {
     fs.mkdirSync(directorio, { recursive: true })
   }
 
-  for (let loop = 0; loop <= 0; loop++) {
+  for (let loop = 0; loop <= Math.ceil(cantidadDeRegistros / cantidadPorArchivo); loop++) {
     const cantidadRegistros = await postRN(loop)
     totalRegistros += cantidadRegistros
     totalDeArchivos++
