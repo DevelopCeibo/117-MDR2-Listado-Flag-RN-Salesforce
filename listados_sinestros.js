@@ -23,6 +23,7 @@ async function postRN(loop = 0) {
     'Oficina',
     'Numero_de_Siniestro',
     'ID_de_incidente',
+    'Codigo_Producto',
   ]
 
   const stringifier = stringify({
@@ -76,6 +77,7 @@ async function Listados_Dni_Cuit() {
   }
 
   for (let loop = 0; loop <= Math.ceil(cantidadDeRegistros / cantidadPorArchivo); loop++) {
+    // for (let loop = 0; loop <= 0; loop++) {
     const cantidadRegistros = await postRN(loop)
     totalRegistros += cantidadRegistros
     totalDeArchivos++
