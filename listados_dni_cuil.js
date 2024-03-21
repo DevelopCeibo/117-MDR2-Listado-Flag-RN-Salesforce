@@ -5,17 +5,17 @@ const dotenv = require('dotenv')
 
 dotenv.config()
 
-async function postRN(loop = 0) {
+async function postRN(loop = 1, start, end) {
   const filename =
     loop + 1 < 10
-      ? `./assets/dni/Listados_Dni_Cuit_v0${loop + 1}.csv`
-      : `./assets/dni/Listados_Dni_Cuit_v${loop + 1}.csv`
+      ? `./assets/dni/Listados_Dni_Cuit_v0${loop}.csv`
+      : `./assets/dni/Listados_Dni_Cuit_v${loop}.csv`
   const writableStream = fs.createWriteStream(filename)
 
   axios.defaults.headers.common['Authorization'] = process.env.ORACLE_PASSWORD
   axios.defaults.headers.post['Content-Type'] = 'application/json'
 
-  const columns = ['Dni', 'ID_en_AIS', 'ID_de_incidente']
+  const columns = ['ID_de_contacto', 'Dni', 'ID_en_AIS', 'ID_de_incidente']
 
   const stringifier = stringify({
     header: true,
@@ -27,7 +27,16 @@ async function postRN(loop = 0) {
   await axios
     .post('https://qbe.custhelp.com/services/rest/connect/v1.3/analyticsReportResults', {
       id: 101762,
-      offset: 10000 * loop,
+      filters: [
+        {
+          name: 'id1',
+          values: JSON.stringify(end),
+        },
+        {
+          name: 'id2',
+          values: JSON.stringify(start),
+        },
+      ],
     })
     .then(function (response) {
       response.data.rows.forEach((row) => {
@@ -56,10 +65,12 @@ async function postRN(loop = 0) {
 }
 
 async function Listados_Dni_Cuit() {
-  const cantidadDeRegistros = 4134494 // 4134494
-  const cantidadPorArchivo = 10000
+  const primerContacto = 131930 // 131934
+  const ultimmoContacto = 12331766 // 12331766
+  const cantidadPorArchivo = 2000
   let totalRegistros = 0
   let totalDeArchivos = 0
+  let loop = 1
   const directorio = `./assets/dni`
 
   // Asegurarse de que el directorio exista, si no, créalo
@@ -67,10 +78,15 @@ async function Listados_Dni_Cuit() {
     fs.mkdirSync(directorio, { recursive: true })
   }
 
-  for (let loop = 0; loop < Math.ceil(cantidadDeRegistros / cantidadPorArchivo); loop++) {
-    const cantidadRegistros = await postRN(loop)
+  for (index = primerContacto; index < ultimmoContacto; index += cantidadPorArchivo) {
+    const start = index
+    const end =
+      index + cantidadPorArchivo > ultimmoContacto ? ultimmoContacto : index + cantidadPorArchivo
+
+    const cantidadRegistros = await postRN(loop, start, end)
     totalRegistros += cantidadRegistros
     totalDeArchivos++
+    loop++
   }
 
   console.log(`Se han guardado ${totalDeArchivos} archivos.`)
