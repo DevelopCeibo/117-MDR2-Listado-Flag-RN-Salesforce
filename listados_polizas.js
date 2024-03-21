@@ -5,24 +5,24 @@ const dotenv = require('dotenv')
 
 dotenv.config()
 
-async function postRN(loop = 0) {
+async function postRN(loop = 1, start, end) {
   const filename =
-    loop + 1 < 10
-      ? `./assets/polizas/Listados_polizas_v0${loop + 1}.csv`
-      : `./assets/polizas/Listados_polizas_v${loop + 1}.csv`
+    loop < 10
+      ? `./assets/polizas/Listados_polizas_v0${loop}.csv`
+      : `./assets/polizas/Listados_polizas_v${loop}.csv`
   const writableStream = fs.createWriteStream(filename)
 
   axios.defaults.headers.common['Authorization'] = process.env.ORACLE_PASSWORD
   axios.defaults.headers.post['Content-Type'] = 'application/json'
 
   const columns = [
+    'ID_de_contacto',
     'ID_Poliza',
     'Poliza',
     'E_Poliza',
     'Producto',
     'ID_en_AIS',
     'ID_de_incidente',
-    'Codigo_Productor',
   ]
 
   const stringifier = stringify({
@@ -35,7 +35,16 @@ async function postRN(loop = 0) {
   await axios
     .post('https://qbe.custhelp.com/services/rest/connect/v1.3/analyticsReportResults', {
       id: 101763,
-      offset: 10000 * loop,
+      filters: [
+        {
+          name: 'id1',
+          values: JSON.stringify(end),
+        },
+        {
+          name: 'id2',
+          values: JSON.stringify(start),
+        },
+      ],
     })
     .then(function (response) {
       response.data.rows.forEach((row) => {
@@ -48,12 +57,13 @@ async function postRN(loop = 0) {
       } else {
         console.log(response.data.count, '<<--count--')
         console.log('loop ->', loop)
+        console.log('loop ->', loop, 'start->', start, 'end->', end)
         throw new Error('Posible pérdida de datos al realizar el pedido post')
       }
     })
     .catch(function (error) {
+      console.log('loop ->', loop, 'start->', start, 'end->', end)
       console.log(error)
-
       return error
     })
 
@@ -64,10 +74,12 @@ async function postRN(loop = 0) {
 }
 
 async function listados_polizas() {
-  const cantidadDeRegistros = 2804479 // 2804479
-  const cantidadPorArchivo = 10000
+  const primerContacto = 131930 // 131930
+  const ultimmoContacto = 12331766 // 12331766
+  const cantidadPorArchivo = 2000
   let totalRegistros = 0
   let totalDeArchivos = 0
+  let loop = 1
   const directorio = `./assets/polizas`
 
   // Asegurarse de que el directorio exista, si no, créalo
@@ -75,10 +87,15 @@ async function listados_polizas() {
     fs.mkdirSync(directorio, { recursive: true })
   }
 
-  for (let loop = 0; loop <= Math.ceil(cantidadDeRegistros / cantidadPorArchivo); loop++) {
-    const cantidadRegistros = await postRN(loop)
+  for (index = primerContacto; index < ultimmoContacto; index += cantidadPorArchivo) {
+    const start = index
+    const end =
+      index + cantidadPorArchivo > ultimmoContacto ? ultimmoContacto : index + cantidadPorArchivo
+
+    const cantidadRegistros = await postRN(loop, start, end)
     totalRegistros += cantidadRegistros
     totalDeArchivos++
+    loop++
   }
 
   console.log(`Se han guardado ${totalDeArchivos} archivos.`)

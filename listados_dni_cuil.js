@@ -20,27 +20,24 @@ async function postRN(loop = 1, start, end) {
   const stringifier = stringify({
     header: true,
     columns: columns,
-    delimiter: '|'
+    delimiter: '|',
   })
 
   let totalRegistros = 0
   await axios
-    .post(
-      'https://qbe.custhelp.com/services/rest/connect/v1.3/analyticsReportResults',
-      {
-        id: 101762,
-        filters: [
-          {
-            name: 'id1',
-            values: JSON.stringify(end)
-          },
-          {
-            name: 'id2',
-            values: JSON.stringify(start)
-          }
-        ]
-      }
-    )
+    .post('https://qbe.custhelp.com/services/rest/connect/v1.3/analyticsReportResults', {
+      id: 101762,
+      filters: [
+        {
+          name: 'id1',
+          values: JSON.stringify(end),
+        },
+        {
+          name: 'id2',
+          values: JSON.stringify(start),
+        },
+      ],
+    })
     .then(function (response) {
       response.data.rows.forEach((row) => {
         const newRow = row.map((data) => data?.replace(/\r\n|\n|\r/g, ' '))
@@ -68,12 +65,12 @@ async function postRN(loop = 1, start, end) {
 }
 
 async function Listados_Dni_Cuit() {
-  const primerContacto = 10561930 // 131930
-  const ultimmoContacto = 10563930 // 12331766
+  const primerContacto = 131930 // 131930
+  const ultimmoContacto = 12331766 // 12331766
   const cantidadPorArchivo = 2000
   let totalRegistros = 0
   let totalDeArchivos = 0
-  let loop = 5216
+  let loop = 1
   const directorio = `./assets/dni`
 
   // Asegurarse de que el directorio exista, si no, créalo
@@ -81,16 +78,10 @@ async function Listados_Dni_Cuit() {
     fs.mkdirSync(directorio, { recursive: true })
   }
 
-  for (
-    index = primerContacto;
-    index < ultimmoContacto;
-    index += cantidadPorArchivo
-  ) {
+  for (index = primerContacto; index < ultimmoContacto; index += cantidadPorArchivo) {
     const start = index
     const end =
-      index + cantidadPorArchivo > ultimmoContacto
-        ? ultimmoContacto
-        : index + cantidadPorArchivo
+      index + cantidadPorArchivo > ultimmoContacto ? ultimmoContacto : index + cantidadPorArchivo
 
     const cantidadRegistros = await postRN(loop, start, end)
     totalRegistros += cantidadRegistros
